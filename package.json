@@ -1,0 +1,21 @@
+{
+  "name": "wechat-d",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "debug": "set NODE_ENV=development && set debug=node:wechat && node index.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "debug": "^2.6.8",
+    "q": "^1.5.0",
+    "request": "^2.81.0",
+    "xml2js": "^0.4.17"
+  },
+  "devDependencies": {
+    "opn": "^5.1.0"
+  }
+}
