@@ -141,36 +141,37 @@ function getUnixTime() {
 }
 
 //  扫描二维码
-function scanQcode(uuid) {
-    let defer = Q.defer()
-    let scanTask = setInterval(function () {
-        let params = {
-            url: 'https://login.weixin.qq.com/cgi-bin/mmwebwx-bin/login',
-            qs: {
-                // loginicon: true,<=加这个有base64头像
-                tip: _tip,
-                uuid: uuid,
-                _: getUnixTime()
-            }
+function scanQcode(uuid, defer) {
+    if (!defer) defer = Q.defer()
+    let params = {
+        url: 'https://login.weixin.qq.com/cgi-bin/mmwebwx-bin/login',
+        qs: {
+            // loginicon: true,<=加这个有base64头像
+            tip: _tip,
+            uuid: uuid,
+            _: getUnixTime()
         }
-        fetch(params, (err, res, body) => {
-            if (err) return defer.reject(err)
-            let m1 = body.match(/window\.code\s*=\s*(\d+)/)
-            let code = parseInt(m1 ? m1[1] : -1)
-            if (code === 201 && _tip === 1) {
-                console.log('【扫码成功，请按登录按钮】')
-                _tip = 0
-            }
-            if (code === 200) {
-                global.clearInterval(scanTask)
-                let m2 = body.match(/redirect_uri\s*=\s*\"([^\"]+)\"/)
-                let ru = m2 ? m2[1] + '&fun=new' : ''
-                debug('baseUrl:%s', ru.slice(0, ru.lastIndexOf('/')))
-                BASE_URL = ru.slice(0, ru.lastIndexOf('/')) + '/'
-                defer.resolve(ru)
-            }
-        })
-    }, 1000)
+    }
+    fetch(params, (err, res, body) => {
+        if (err) return defer.reject(err)
+        let m1 = body.match(/window\.code\s*=\s*(\d+)/)
+        let code = parseInt(m1 ? m1[1] : -1)
+        if (code === 201 && _tip === 1) {
+            console.log('【扫码成功，请按登录按钮】')
+            _tip = 0
+            scanQcode(uuid, defer)
+        }
+        if (code === 200) {
+            let m2 = body.match(/redirect_uri\s*=\s*\"([^\"]+)\"/)
+            let ru = m2 ? m2[1] + '&fun=new' : ''
+            debug('baseUrl:%s', ru.slice(0, ru.lastIndexOf('/')))
+            BASE_URL = ru.slice(0, ru.lastIndexOf('/')) + '/'
+            defer.resolve(ru)
+        }
+        if (code === 408) {
+            scanQcode(uuid, defer)
+        }
+    })
     return defer.promise
 }
 
